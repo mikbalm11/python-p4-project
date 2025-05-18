@@ -1,7 +1,7 @@
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import validates
-from config import db
+from config import db, bcrypt
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
@@ -72,8 +72,14 @@ class Movie(db.Model, SerializerMixin):
 
     @validates('points')
     def validate_points(self, key, points):
-        if not isinstance(points, float) or (10 <= points < 0):
+        try:
+            points = float(points)
+        except (ValueError, TypeError):
+            raise ValueError("Points must be a number.")
+
+        if not (0 <= points <= 10):
             raise ValueError("Points must be a non-negative float between 0 and 10.")
+        
         return points
 
     @validates('notes')

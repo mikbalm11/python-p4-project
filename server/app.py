@@ -3,11 +3,13 @@
 # Standard library imports
 
 # Remote library imports
-from flask import request
+from flask import request, session, make_response
 from flask_restful import Resource
+from sqlalchemy.exc import IntegrityError
 
 # Local imports
 from config import app, db, api
+from models import User, Movie, Genre
 # Add your model imports
 
 
