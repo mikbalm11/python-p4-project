@@ -1,5 +1,6 @@
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import validates
 from config import db
 
 class User(db.Model, SerializerMixin):
@@ -16,6 +17,12 @@ class User(db.Model, SerializerMixin):
     # Serialization rules
     serialize_rules = ('-movies.user', '-password_hash',)
 
+    @validates('username')
+    def validate_username(self, key, username):
+        if not username or not isinstance(username, str) or len(username.strip()) < 3:
+            raise ValueError("Username must be a non-empty string of at least 3 characters.")
+        return username
+
     def __repr__(self):
         return f"<User {self.username}>"
 
@@ -31,6 +38,12 @@ class Genre(db.Model, SerializerMixin):
 
     serialize_rules = ('-movies.genre',)
 
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name or not isinstance(name, str) or len(name.strip()) < 2:
+            raise ValueError("Genre name must be a non-empty string of at least 2 characters.")
+        return name
+
     def __repr__(self):
         return f"<Genre {self.name}>"
 
@@ -39,7 +52,7 @@ class Movie(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    points = db.Column(db.Integer, nullable=False)
+    points = db.Column(db.Float, nullable=False)
     notes = db.Column(db.Text)
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -50,6 +63,26 @@ class Movie(db.Model, SerializerMixin):
     genre = db.relationship('Genre', back_populates='movies')
 
     serialize_rules = ('-user.movies', '-genre.movies')
+
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name or not isinstance(name, str) or len(name.strip()) < 1:
+            raise ValueError("Movie name must be a non-empty string.")
+        return name.strip()
+
+    @validates('points')
+    def validate_points(self, key, points):
+        if not isinstance(points, float) or (10 <= points < 0):
+            raise ValueError("Points must be a non-negative float between 0 and 10.")
+        return points
+
+    @validates('notes')
+    def validate_notes(self, key, notes):
+        if notes is not None:
+            if not isinstance(notes, str) or len(notes.strip()) < 10:
+                raise ValueError("Notes must be at least 10 characters long.")
+            return notes
+        return None
 
     def __repr__(self):
         return f"<Movie {self.name} (User {self.user_id}, Genre {self.genre_id})>"
