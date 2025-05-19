@@ -1,10 +1,8 @@
-from faker import Faker
-from random import choice, uniform
 from config import app, db
 from models import User, Genre, Movie
 from flask_bcrypt import Bcrypt
+from random import choice, uniform
 
-faker = Faker()
 bcrypt = Bcrypt()
 
 with app.app_context():
@@ -15,18 +13,21 @@ with app.app_context():
     Genre.query.delete()
     User.query.delete()
 
-    # Seed Users
+    # Seed Users with real example usernames
+    users_data = [
+        ("ikbal", "password"),
+        ("alice", "password"),
+        ("bob", "password"),
+        ("charlie", "password"),
+        ("diana", "password"),
+        ("eve", "password"),
+    ]
     users = []
-    for i in range(5):
-        username = faker.user_name()
-        password_hash = bcrypt.generate_password_hash("password").decode('utf-8')
+    for username, raw_pw in users_data:
+        password_hash = bcrypt.generate_password_hash(raw_pw).decode('utf-8')
         user = User(username=username, password_hash=password_hash)
         db.session.add(user)
         users.append(user)
-
-    my_user = User(username="ikbal", password_hash=bcrypt.generate_password_hash("password").decode('utf-8'))
-    db.session.add(my_user)
-    users.append(my_user)
 
     # Seed Genres
     genre_names = ["Action", "Drama", "Sci-Fi", "Romance", "Comedy", "Horror"]
@@ -38,14 +39,41 @@ with app.app_context():
 
     db.session.commit()
 
-    # Seed Movies
-    for _ in range(20):
+    # Seed Movies with real titles and notes
+    movies_data = [
+        ("Inception", 9.0, "A mind-bending thriller that explores dreams within dreams.", "ikbal", "Sci-Fi"),
+        ("The Shawshank Redemption", 9.5, "An inspiring story of hope and friendship in prison.", "alice", "Drama"),
+        ("The Dark Knight", 9.3, "Batman faces the Joker in this critically acclaimed action film.", "bob", "Action"),
+        ("Titanic", 8.5, "A tragic romance set against the sinking of the Titanic.", "charlie", "Romance"),
+        ("Superbad", 7.6, "A hilarious coming-of-age comedy about high school friends.", "diana", "Comedy"),
+        ("Get Out", 8.0, "A chilling horror film with sharp social commentary.", "eve", "Horror"),
+        ("Interstellar", 8.8, "A visually stunning sci-fi epic exploring space and time.", "ikbal", "Sci-Fi"),
+        ("Forrest Gump", 8.8, "Life’s unexpected journey through the eyes of Forrest.", "alice", "Drama"),
+        ("The Hangover", 7.7, "A wild comedy about a bachelor party gone wrong.", "bob", "Comedy"),
+        ("A Quiet Place", 7.5, "A suspenseful horror about silence and survival.", "charlie", "Horror"),
+        ("La La Land", 8.0, "A modern musical romance set in Los Angeles.", "diana", "Romance"),
+        ("Mad Max: Fury Road", 8.1, "High-octane action in a post-apocalyptic world.", "eve", "Action"),
+        ("Arrival", 7.9, "A thoughtful sci-fi film about language and alien contact.", "ikbal", "Sci-Fi"),
+        ("The Godfather", 9.2, "A classic crime drama about a powerful mafia family.", "alice", "Drama"),
+        ("Bridesmaids", 6.8, "A raunchy comedy centered around friendship and weddings.", "bob", "Comedy"),
+        ("Hereditary", 7.3, "A deeply unsettling horror about family secrets.", "charlie", "Horror"),
+        ("Pride & Prejudice", 8.1, "A timeless romantic drama based on Jane Austen’s novel.", "diana", "Romance"),
+        ("Gladiator", 8.5, "An epic action film about revenge and honor in ancient Rome.", "eve", "Action"),
+        ("Blade Runner 2049", 8.0, "A visually striking sci-fi sequel exploring identity.", "ikbal", "Sci-Fi"),
+        ("The Fault in Our Stars", 7.7, "A heartfelt romance about young love and loss.", "alice", "Romance"),
+    ]
+
+    # Add movies with correct user and genre IDs
+    username_to_user = {user.username: user for user in users}
+    genre_name_to_genre = {genre.name: genre for genre in genres}
+
+    for name, points, notes, username, genre_name in movies_data:
         movie = Movie(
-            name=faker.sentence(nb_words=3),
-            points=round(uniform(0, 10), 1),  # ✅ float between 0 and 10
-            notes=faker.paragraph(nb_sentences=2),
-            user_id=choice(users).id,
-            genre_id=choice(genres).id
+            name=name,
+            points=points,
+            notes=notes,
+            user_id=username_to_user[username].id,
+            genre_id=genre_name_to_genre[genre_name].id,
         )
         db.session.add(movie)
 
