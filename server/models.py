@@ -1,5 +1,6 @@
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import validates
 from config import db, bcrypt
 
@@ -8,7 +9,7 @@ class User(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable=False, unique=True)
-    password_hash = db.Column(db.String, nullable=False)
+    _password_hash = db.Column(db.String, nullable=False)
 
     # Relationships
     movies = db.relationship('Movie', back_populates='user', cascade='all, delete-orphan')
@@ -17,16 +18,17 @@ class User(db.Model, SerializerMixin):
     # Serialization rules
     serialize_rules = ('-movies.user', '-password_hash',)
 
-    @property
-    def password(self):
-        raise AttributeError("Password is write-only.")
+    @hybrid_property
+    def password_hash(self):
+        raise AttributeError('Password hashes may not be viewed.')
 
-    @password.setter
-    def password(self, password):
-        self.password_hash = bcrypt.generate_password_hash(password.encode('utf-8')).decode('utf-8')
+    @password_hash.setter
+    def password_hash(self, password):
+        password_hash = bcrypt.generate_password_hash(password.encode('utf-8'))
+        self._password_hash = password_hash.decode('utf-8')
 
     def authenticate(self, password):
-        return bcrypt.check_password_hash(self.password_hash, password.encode('utf-8'))
+        return bcrypt.check_password_hash(self._password_hash, password.encode('utf-8'))
 
     @validates('username')
     def validate_username(self, key, username):

@@ -1,9 +1,5 @@
 from config import app, db
 from models import User, Genre, Movie
-from flask_bcrypt import Bcrypt
-from random import choice, uniform
-
-bcrypt = Bcrypt()
 
 with app.app_context():
     print("🌱 Seeding database...")
@@ -25,7 +21,7 @@ with app.app_context():
     users = []
     for username, raw_pw in users_data:
         user = User(username=username)
-        user.password = raw_pw  # uses the @password.setter and hashes automatically
+        user.password_hash = raw_pw  # Correct property name to trigger hashing
         db.session.add(user)
         users.append(user)
         print(f"Created user: {username} with password: {raw_pw}")
@@ -64,7 +60,7 @@ with app.app_context():
         ("The Fault in Our Stars", 7.7, "A heartfelt romance about young love and loss.", "alice", "Romance"),
     ]
 
-    # Add movies with correct user and genre IDs
+    # Map usernames and genres for quick lookup
     username_to_user = {user.username: user for user in users}
     genre_name_to_genre = {genre.name: genre for genre in genres}
 
