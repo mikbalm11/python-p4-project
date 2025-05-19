@@ -84,7 +84,7 @@ class Movie(db.Model, SerializerMixin):
 
     @validates('notes')
     def validate_notes(self, key, notes):
-        if notes is not None:
+        if notes:
             if not isinstance(notes, str) or len(notes.strip()) < 10:
                 raise ValueError("Notes must be at least 10 characters long.")
             return notes

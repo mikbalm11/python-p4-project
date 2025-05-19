@@ -24,6 +24,10 @@ with app.app_context():
         db.session.add(user)
         users.append(user)
 
+    my_user = User(username="ikbal", password_hash=bcrypt.generate_password_hash("password").decode('utf-8'))
+    db.session.add(my_user)
+    users.append(my_user)
+
     # Seed Genres
     genre_names = ["Action", "Drama", "Sci-Fi", "Romance", "Comedy", "Horror"]
     genres = []

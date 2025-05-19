@@ -125,12 +125,40 @@ class Logout(Resource):
 class GenreList(Resource):
     def get(self):
         genres = Genre.query.all()
-        result = make_response(
-            [genre.to_dict() for genre in genres],
-            200
-        )
-        return result
+        return [genre.to_dict() for genre in genres], 200
 
+    def post(self):
+        fields = request.get_json()
+        name = fields.get('name')
+
+        if not name or len(name.strip()) < 2:
+            return {"error": "Genre name must be at least 2 characters"}, 422
+
+        try:
+            new_genre = Genre(name=name.strip())
+            db.session.add(new_genre)
+            db.session.commit()
+            return new_genre.to_dict(), 201
+
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "Genre name must be unique"}, 422
+
+class UserGenreList(Resource):
+    def get(self):
+        user_id = session.get('user_id')
+        if not user_id:
+            return make_response({'error': 'Unauthorized'}, 401)
+
+        user = User.query.get(user_id)
+        if not user:
+            return make_response({'error': 'User not found'}, 404)
+
+        # Extract unique genre_ids from user's movies
+        genre_ids = {movie.genre_id for movie in user.movies}
+
+        genres = Genre.query.filter(Genre.id.in_(genre_ids)).all()
+        return [genre.to_dict() for genre in genres], 200
 
 class MovieIndex(Resource):
     def get(self):
@@ -205,6 +233,59 @@ class MovieIndex(Resource):
             )
             return result
 
+class MovieDetail(Resource):
+    def patch(self, movie_id):
+        if 'user_id' not in session:
+            return make_response({'error': 'Unauthorized'}, 401)
+
+        movie = Movie.query.get(movie_id)
+        if not movie or movie.user_id != session['user_id']:
+            return make_response({'error': 'Movie not found or unauthorized'}, 404)
+
+        data = request.get_json()
+        name = data.get('name')
+        points = data.get('points')
+        notes = data.get('notes')
+        genre_id = data.get('genre_id')
+
+        if genre_id:
+            genre = Genre.query.get(genre_id)
+            if not genre:
+                return make_response({'error': 'Genre not found'}, 422)
+
+        try:
+            if name is not None:
+                movie.name = name
+            if points is not None:
+                movie.points = points
+            if notes is not None:
+                movie.notes = notes
+            if genre_id is not None:
+                movie.genre_id = genre_id
+
+            db.session.commit()
+            return make_response(movie.to_dict(), 200)
+
+        except IntegrityError:
+            db.session.rollback()
+            return make_response({'error': 'Failed to update movie'}, 422)
+
+    def delete(self, movie_id):
+        if 'user_id' not in session:
+            return make_response({'error': 'Unauthorized'}, 401)
+
+        movie = Movie.query.get(movie_id)
+        if not movie or movie.user_id != session['user_id']:
+            return make_response({'error': 'Movie not found or unauthorized'}, 404)
+
+        try:
+            db.session.delete(movie)
+            db.session.commit()
+            return make_response({}, 204)  # No content
+
+        except Exception as e:
+            db.session.rollback()
+            return make_response({'error': 'Failed to delete movie'}, 422)
 
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
@@ -212,7 +293,8 @@ api.add_resource(Login, '/login', endpoint='login')
 api.add_resource(Logout, '/logout', endpoint='logout')
 api.add_resource(GenreList, '/genres', endpoint='genres')
 api.add_resource(MovieIndex, '/movies', endpoint='movies')
-
+api.add_resource(MovieDetail, '/movies/<int:movie_id>', endpoint='movie_detail')
+api.add_resource(UserGenreList, '/user_genres', endpoint='user_genres')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
