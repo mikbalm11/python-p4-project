@@ -27,89 +27,65 @@ def check_if_logged_in():
 class Signup(Resource):
     def post(self):
         fields = request.get_json()
-
         username = fields.get('username')
         password = fields.get('password')
 
         if not username or not password:
-            result = make_response(
-                {'error': 'Username and password required'},
-                422
-            )
-            return result
+            return make_response({'error': 'Username and password required'}, 422)
 
         try:
-            hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
-
-            new_user = User(username=username, password_hash=hashed_pw)
+            new_user = User(username=username)
+            new_user.password = password  # ✅ Use setter
 
             db.session.add(new_user)
             db.session.commit()
 
             session['user_id'] = new_user.id
 
-            result = make_response(
-                new_user.to_dict(),
-                201
-            )
-            return result
+            return make_response(new_user.to_dict(), 201)
 
         except IntegrityError:
             db.session.rollback()
-            result = make_response(
-                {'error': '422 Unprocessable Entity - Username taken'},
-                422
-            )
-            return result
+            return make_response({'error': '422 Unprocessable Entity - Username taken'}, 422)
 
         except ValueError as e:
-            result = make_response(
-                {'error': str(e)},
-                422
-            )
-            return result
+            return make_response({'error': str(e)}, 422)
 
 
 class CheckSession(Resource):
     def get(self):
-        user_id = session.get('user_id')
-        if user_id:
-            user = User.query.get(user_id)
-            if user:
-                result = make_response(
-                    user.to_dict(),
-                    200
-                )
-                return result
-        result = make_response(
-            {},
-            401
-        )
-        return result
+        try:
+            user_id = session.get('user_id')
+            if user_id:
+                user = User.query.get(user_id)
+                if user:
+                    return make_response(user.to_dict(), 200)
+            return make_response({}, 401)
+        except Exception as e:
+            print("CheckSession error:", e)
+            return make_response({'error': 'Server error during session check'}, 500)
+
 
 
 class Login(Resource):
     def post(self):
-        request_json = request.get_json()
+        try:
+            request_json = request.get_json()
+            username = request_json.get('username')
+            password = request_json.get('password')
 
-        username = request_json.get('username')
-        password = request_json.get('password')
+            user = User.query.filter_by(username=username).first()
 
-        user = User.query.filter_by(username=username).first()
+            if user and user.authenticate(password):
+                session['user_id'] = user.id
+                return make_response(user.to_dict(), 200)
 
-        if user and bcrypt.check_password_hash(user.password_hash, password):
-            session['user_id'] = user.id
-            result = make_response(
-                user.to_dict(),
-                200
-            )
-            return result
+            return make_response({'error': '401 Unauthorized'}, 401)
 
-        result = make_response(
-            {'error': '401 Unauthorized'},
-            401
-        )
-        return result
+        except Exception as e:
+            print("Login error:", e)
+            return make_response({'error': 'Server error during login'}, 500)
+
 
 
 class Logout(Resource):

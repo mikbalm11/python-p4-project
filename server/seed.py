@@ -24,10 +24,11 @@ with app.app_context():
     ]
     users = []
     for username, raw_pw in users_data:
-        password_hash = bcrypt.generate_password_hash(raw_pw).decode('utf-8')
-        user = User(username=username, password_hash=password_hash)
+        user = User(username=username)
+        user.password = raw_pw  # uses the @password.setter and hashes automatically
         db.session.add(user)
         users.append(user)
+        print(f"Created user: {username} with password: {raw_pw}")
 
     # Seed Genres
     genre_names = ["Action", "Drama", "Sci-Fi", "Romance", "Comedy", "Horror"]

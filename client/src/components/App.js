@@ -139,7 +139,7 @@ function App() {
 
             {expandedGenreId === genre.id && (
               <ul>
-                {moviesByGenre[genre.id].map((movie) =>
+                {(moviesByGenre[genre.id] || []).map((movie) =>
                   editingMovie === movie.id ? (
                     <li key={movie.id}>
                       <form onSubmit={handleEditSubmit}>

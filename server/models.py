@@ -17,6 +17,17 @@ class User(db.Model, SerializerMixin):
     # Serialization rules
     serialize_rules = ('-movies.user', '-password_hash',)
 
+    @property
+    def password(self):
+        raise AttributeError("Password is write-only.")
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = bcrypt.generate_password_hash(password.encode('utf-8')).decode('utf-8')
+
+    def authenticate(self, password):
+        return bcrypt.check_password_hash(self.password_hash, password.encode('utf-8'))
+
     @validates('username')
     def validate_username(self, key, username):
         if not username or not isinstance(username, str) or len(username.strip()) < 3:
