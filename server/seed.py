@@ -21,7 +21,7 @@ with app.app_context():
     users = []
     for username, raw_pw in users_data:
         user = User(username=username)
-        user.password_hash = raw_pw  # Correct property name to trigger hashing
+        user.password = raw_pw  # Correct property name to trigger hashing
         db.session.add(user)
         users.append(user)
         print(f"Created user: {username} with password: {raw_pw}")

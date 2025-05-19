@@ -9,26 +9,29 @@ class User(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable=False, unique=True)
-    _password_hash = db.Column(db.String, nullable=False)
+    _password = db.Column(db.String, nullable=False)
 
     # Relationships
     movies = db.relationship('Movie', back_populates='user', cascade='all, delete-orphan')
     genres = association_proxy('movies', 'genre')
 
     # Serialization rules
-    serialize_rules = ('-movies.user', '-password_hash',)
+    serialize_rules = ('-movies.user', '-_password',)
 
     @hybrid_property
-    def password_hash(self):
+    def password(self):
         raise AttributeError('Password hashes may not be viewed.')
 
-    @password_hash.setter
-    def password_hash(self, password):
+    @password.setter
+    def password(self, password):
         password_hash = bcrypt.generate_password_hash(password.encode('utf-8'))
-        self._password_hash = password_hash.decode('utf-8')
+        self._password = password_hash.decode('utf-8')
 
     def authenticate(self, password):
-        return bcrypt.check_password_hash(self._password_hash, password.encode('utf-8'))
+        try:
+            return bcrypt.check_password_hash(self._password, password.encode('utf-8'))
+        except ValueError as e:
+            raise ValueError(f"Password hash is invalid: {self._password}") from e
 
     @validates('username')
     def validate_username(self, key, username):

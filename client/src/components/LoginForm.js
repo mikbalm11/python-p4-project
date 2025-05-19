@@ -1,4 +1,3 @@
-// src/components/LoginForm.js
 import React, { useState } from "react";
 
 function LoginForm({ onLogin }) {

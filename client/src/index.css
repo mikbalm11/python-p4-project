@@ -1,7 +1,209 @@
-:root {
-  --bg: #282c34;
-  --header: #fff;
-  --link: #61dafb;
-  --text: hsla(0, 0%, 100%, 0.88);
+/* Reset some default styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
+body {
+  background-color: #f5f7fa;
+  color: #333;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+/* Container for main app content */
+.app-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+}
+
+/* Headings */
+h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #222;
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  user-select: none;
+}
+
+/* Clickable genre headers */
+h3[style*="cursor: pointer"] {
+  transition: color 0.3s ease;
+}
+h3[style*="cursor: pointer"]:hover {
+  color: #005fa3;
+}
+
+/* Movie list styles */
+ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+li {
+  background: #fefefe;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inline elements in movie list */
+li strong {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+li em {
+  color: #666;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* Buttons */
+button {
+  background-color: #0077cc;
+  border: none;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  transition: background-color 0.3s ease;
+  align-self: flex-start;
+  user-select: none;
+}
+
+button:hover,
+button:focus {
+  background-color: #005fa3;
+  outline: none;
+}
+
+button:disabled {
+  background-color: #bbb;
+  cursor: not-allowed;
+}
+
+/* Form inside editing list items */
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+form input[type="text"],
+form input[type="number"],
+form textarea,
+form select {
+  padding: 0.4rem 0.6rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  flex-grow: 1;
+  min-width: 120px;
+  max-width: 100%;
+  font-family: inherit;
+}
+
+form textarea {
+  resize: vertical;
+  min-height: 3rem;
+  max-height: 6rem;
+  flex-basis: 100%;
+}
+
+form button {
+  flex-shrink: 0;
+}
+
+/* NavBar styles */
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+nav button {
+  margin-left: 1rem;
+}
+
+/* Links inside NavBar */
+nav a {
+  text-decoration: none;
+  color: #0077cc;
+  font-weight: 600;
+}
+
+nav a:hover,
+nav a:focus {
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .app-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  form {
+    flex-direction: column;
+  }
+
+  form input,
+  form select,
+  form textarea,
+  form button {
+    width: 100%;
+  }
+
+  button {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.movie-item {
+  position: relative;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 5px;
+}
+
+.movie-buttons {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0;
+}

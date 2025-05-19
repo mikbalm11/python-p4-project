@@ -1,50 +1,200 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import AddMovieForm from "./AddMovieForm";
 
-function MovieList() {
-  const [movies, setMovies] = useState([]);
-  const [name, setName] = useState("");
-  const [points, setPoints] = useState(0);
-  const [notes, setNotes] = useState("");
-  const [genre_id, setGenreId] = useState(1); // default, change as needed
+function MovieList({ movies, genres, userGenres, refreshData }) {
+  const [expandedGenreId, setExpandedGenreId] = useState(null);
+  const [editingMovie, setEditingMovie] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editPoints, setEditPoints] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editGenreId, setEditGenreId] = useState("");
 
-  useEffect(() => {
-    fetch("/movies")
-      .then(res => res.json())
-      .then(setMovies);
-  }, []);
-
-  function handleAddMovie(e) {
-    e.preventDefault();
-
-    fetch("/movies", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, points, notes, genre_id }),
-    })
-      .then(res => {
-        if (res.ok) return res.json();
-        throw new Error("Failed to add movie");
-      })
-      .then(newMovie => setMovies([...movies, newMovie]))
-      .catch(err => alert(err.message));
+  function startEditing(movie) {
+    setEditingMovie(movie.id);
+    setEditName(movie.name);
+    setEditPoints(movie.points.toString());
+    setEditNotes(movie.notes || "");
+    setEditGenreId(movie.genre.id.toString());
   }
+
+  function cancelEditing() {
+    setEditingMovie(null);
+  }
+
+  async function handleEditSubmit(e) {
+    e.preventDefault();
+    try {
+      const res = await fetch(`/movies/${editingMovie}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName,
+          points: parseFloat(editPoints),
+          notes: editNotes,
+          genre_id: parseInt(editGenreId, 10),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update movie");
+      }
+
+      await refreshData();
+      setEditingMovie(null);
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  function handleDelete(id) {
+    if (!window.confirm("Are you sure you want to delete this movie?")) return;
+    fetch(`/movies/${id}`, { method: "DELETE" }).then((r) => {
+      if (r.ok) {
+        refreshData();
+      } else {
+        alert("Failed to delete movie");
+      }
+    });
+  }
+
+  async function handleAddMovie({ name, points, notes, genreId }) {
+    const parsedGenreId = parseInt(genreId, 10);
+    if (isNaN(parsedGenreId)) {
+      alert("Please select a valid genre.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/movies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          points: parseFloat(points),
+          notes,
+          genre_id: parsedGenreId,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to add movie");
+      }
+
+      await refreshData();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  const moviesByGenre = {};
+  genres.forEach((genre) => {
+    moviesByGenre[genre.id] = movies.filter((m) => m.genre.id === genre.id);
+  });
 
   return (
     <div>
-      <h3>Your Movies</h3>
-      <ul>
-        {movies.map(m => (
-          <li key={m.id}>{m.name} — {m.points}/10</li>
-        ))}
-      </ul>
+      {userGenres.map((genre) => (
+        <div key={genre.id} style={{ marginBottom: "1rem" }}>
+          <h3
+            style={{ cursor: "pointer", color: "#0077cc" }}
+            onClick={() =>
+              setExpandedGenreId(expandedGenreId === genre.id ? null : genre.id)
+            }
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                setExpandedGenreId(expandedGenreId === genre.id ? null : genre.id);
+              }
+            }}
+            aria-expanded={expandedGenreId === genre.id}
+            role="button"
+          >
+            {genre.name}
+          </h3>
 
-      <form onSubmit={handleAddMovie}>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Movie name" />
-        <input value={points} onChange={e => setPoints(e.target.value)} placeholder="Points" type="number" step="0.1" />
-        <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes" />
-        <input value={genre_id} onChange={e => setGenreId(e.target.value)} placeholder="Genre ID" type="number" />
-        <button>Add Movie</button>
-      </form>
+          {expandedGenreId === genre.id && (
+            <ul>
+              {(moviesByGenre[genre.id] || []).map((movie) =>
+                editingMovie === movie.id ? (
+                  <li key={movie.id}>
+                    <form onSubmit={handleEditSubmit}>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        required
+                        aria-label="Edit movie name"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        step="0.1"
+                        value={editPoints}
+                        onChange={(e) => setEditPoints(e.target.value)}
+                        required
+                        aria-label="Edit movie points"
+                      />
+                      <textarea
+                        value={editNotes}
+                        onChange={(e) => setEditNotes(e.target.value)}
+                        aria-label="Edit movie notes"
+                      />
+                      <select
+                        value={editGenreId}
+                        onChange={(e) => setEditGenreId(e.target.value)}
+                        required
+                        aria-label="Edit movie genre"
+                      >
+                        {genres.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button type="submit">Save</button>
+                      <button type="button" onClick={cancelEditing}>
+                        Cancel
+                      </button>
+                    </form>
+                  </li>
+                ) : (
+                  <li key={movie.id} className="movie-item">
+                    <div className="movie-buttons">
+                      <button
+                        onClick={() => startEditing(movie)}
+                        aria-label={`Edit ${movie.name}`}
+                        className="btn-icon"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(movie.id)}
+                        aria-label={`Delete ${movie.name}`}
+                        className="btn-icon"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+
+                    <strong>{movie.name}</strong> — Points: {movie.points}
+                    <br />
+                    <em>Notes:</em> {movie.notes || "No notes"}
+                  </li>
+                )
+              )}
+            </ul>
+          )}
+        </div>
+      ))}
+
+      <AddMovieForm
+        genres={genres}
+        onAddMovie={handleAddMovie}
+        onAddGenre={refreshData}
+      />
     </div>
   );
 }

@@ -14,40 +14,33 @@ function AddMovieForm({ genres, onAddMovie, onAddGenre }) {
       alert("Please select a genre or add a new one");
       return;
     }
-    fetch("/movies", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        points,
-        notes,
-        genre_id: genreId,
-      }),
-    })
-      .then((r) => {
-        if (r.ok) return r.json();
-        else return r.json().then((err) => Promise.reject(err));
-      })
-      .then((newMovie) => {
-        onAddMovie(newMovie);
-        setName("");
-        setPoints("");
-        setNotes("");
-        setGenreId("");
-      })
-      .catch((err) => alert(err.error || "Failed to add movie"));
+
+    onAddMovie({
+      name,
+      points,
+      notes,
+      genreId,
+    });
+
+    // Clear form
+    setName("");
+    setPoints("");
+    setNotes("");
+    setGenreId("");
   }
 
   return (
-    <div>
-      <h2>Add Movie</h2>
-      <form onSubmit={handleSubmit}>
+    <div className="add-movie-container">
+      <h2>Add a New Movie</h2>
+      <form onSubmit={handleSubmit} className="add-movie-form">
         <input
           type="text"
           placeholder="Movie title"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          aria-label="Movie title"
+          className="input-text"
         />
         <input
           type="number"
@@ -58,16 +51,22 @@ function AddMovieForm({ genres, onAddMovie, onAddGenre }) {
           value={points}
           onChange={(e) => setPoints(e.target.value)}
           required
+          aria-label="Points (0 to 10)"
+          className="input-number"
         />
         <textarea
-          placeholder="Notes (min 10 characters)"
+          placeholder="Notes (optional)"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          aria-label="Notes about the movie"
+          className="textarea-notes"
         />
         <select
           value={genreId}
           onChange={(e) => setGenreId(e.target.value)}
           required
+          aria-label="Select genre"
+          className="select-genre"
         >
           <option value="">-- Select Genre --</option>
           {genres.map((genre) => (
@@ -76,10 +75,15 @@ function AddMovieForm({ genres, onAddMovie, onAddGenre }) {
             </option>
           ))}
         </select>
-        <button type="submit">Add Movie</button>
+        <button type="submit" className="btn btn-primary">
+          Add Movie
+        </button>
       </form>
 
-      <button onClick={() => setShowGenreForm(!showGenreForm)}>
+      <button
+        onClick={() => setShowGenreForm((prev) => !prev)}
+        className="btn btn-secondary toggle-genre-form-btn"
+      >
         {showGenreForm ? "Cancel Adding Genre" : "Add New Genre"}
       </button>
 

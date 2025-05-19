@@ -22,15 +22,19 @@ function AddGenreForm({ onAddGenre }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="add-genre-form">
       <input
         type="text"
         placeholder="New genre name"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
+        aria-label="New genre name"
+        className="input-text"
       />
-      <button type="submit">Add Genre</button>
+      <button type="submit" className="btn btn-primary">
+        Add Genre
+      </button>
     </form>
   );
 }
