@@ -21,7 +21,7 @@ with app.app_context():
     users = []
     for username, raw_pw in users_data:
         user = User(username=username)
-        user.password = raw_pw  # Correct property name to trigger hashing
+        user.password = raw_pw
         db.session.add(user)
         users.append(user)
         print(f"Created user: {username} with password: {raw_pw}")
@@ -45,7 +45,7 @@ with app.app_context():
         ("Superbad", 7.6, "A hilarious coming-of-age comedy about high school friends.", "diana", "Comedy"),
         ("Get Out", 8.0, "A chilling horror film with sharp social commentary.", "eve", "Horror"),
         ("Interstellar", 8.8, "A visually stunning sci-fi epic exploring space and time.", "ikbal", "Sci-Fi"),
-        ("Forrest Gump", 8.8, "Life’s unexpected journey through the eyes of Forrest.", "alice", "Drama"),
+        ("Forrest Gump", 8.8, "Life's unexpected journey through the eyes of Forrest.", "alice", "Drama"),
         ("The Hangover", 7.7, "A wild comedy about a bachelor party gone wrong.", "bob", "Comedy"),
         ("A Quiet Place", 7.5, "A suspenseful horror about silence and survival.", "charlie", "Horror"),
         ("La La Land", 8.0, "A modern musical romance set in Los Angeles.", "diana", "Romance"),
@@ -58,6 +58,26 @@ with app.app_context():
         ("Gladiator", 8.5, "An epic action film about revenge and honor in ancient Rome.", "eve", "Action"),
         ("Blade Runner 2049", 8.0, "A visually striking sci-fi sequel exploring identity.", "ikbal", "Sci-Fi"),
         ("The Fault in Our Stars", 7.7, "A heartfelt romance about young love and loss.", "alice", "Romance"),
+        ("Parasite", 8.6, "A darkly comedic thriller that examines class disparity.", "eve", "Drama"),
+        ("The Matrix", 8.7, "A cyberpunk classic exploring reality and human freedom.", "ikbal", "Sci-Fi"),
+        ("John Wick", 7.4, "Stylish and intense action with a revenge-driven narrative.", "bob", "Action"),
+        ("The Notebook", 7.8, "A tearjerking love story that spans decades.", "charlie", "Romance"),
+        ("Mean Girls", 7.0, "A sharp and funny teen comedy about high school cliques.", "diana", "Comedy"),
+        ("The Conjuring", 7.5, "A supernatural horror film based on true events.", "eve", "Horror"),
+        ("Gravity", 7.7, "A breathtaking space survival story.", "ikbal", "Sci-Fi"),
+        ("Joker", 8.4, "A disturbing character study of a man’s descent into madness.", "alice", "Drama"),
+        ("Taken", 7.8, "A fast-paced action thriller about a father's mission.", "bob", "Action"),
+        ("500 Days of Summer", 7.7, "An unconventional take on love and heartbreak.", "charlie", "Romance"),
+        ("The 40-Year-Old Virgin", 7.1, "A quirky comedy about late-blooming romance.", "diana", "Comedy"),
+        ("Insidious", 6.8, "A family faces terrifying forces from the beyond.", "eve", "Horror"),
+        ("Ex Machina", 7.7, "An eerie sci-fi tale about AI and ethics.", "ikbal", "Sci-Fi"),
+        ("The Pursuit of Happyness", 8.0, "An emotional drama about perseverance and fatherhood.", "alice", "Drama"),
+        ("Edge of Tomorrow", 7.9, "A clever action-sci-fi hybrid with time loops.", "bob", "Action"),
+        ("Before Sunrise", 8.1, "A romantic encounter between strangers in Europe.", "charlie", "Romance"),
+        ("Pitch Perfect", 7.1, "A fun, musical comedy with acapella battles.", "diana", "Comedy"),
+        ("It", 7.3, "A terrifying adaptation of Stephen King's horror classic.", "eve", "Horror"),
+        ("Dune", 8.1, "An epic sci-fi saga of politics and prophecy.", "ikbal", "Sci-Fi"),
+        ("Little Women", 7.9, "A touching adaptation of the literary classic.", "alice", "Drama"),
     ]
 
     # Map usernames and genres for quick lookup

@@ -11,11 +11,9 @@ class User(db.Model, SerializerMixin):
     username = db.Column(db.String, nullable=False, unique=True)
     _password = db.Column(db.String, nullable=False)
 
-    # Relationships
     movies = db.relationship('Movie', back_populates='user', cascade='all, delete-orphan')
     genres = association_proxy('movies', 'genre')
 
-    # Serialization rules
     serialize_rules = ('-movies.user', '-_password',)
 
     @hybrid_property
@@ -48,7 +46,6 @@ class Genre(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False, unique=True)
 
-    # Relationships
     movies = db.relationship('Movie', back_populates='genre', cascade='all, delete-orphan')
     users = association_proxy('movies', 'user')
 
@@ -74,7 +71,6 @@ class Movie(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     genre_id = db.Column(db.Integer, db.ForeignKey('genres.id'), nullable=False)
 
-    # Relationships
     user = db.relationship('User', back_populates='movies')
     genre = db.relationship('Genre', back_populates='movies')
 

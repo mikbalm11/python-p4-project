@@ -22,7 +22,6 @@ function AddMovieForm({ genres, onAddMovie, onAddGenre }) {
       genreId,
     });
 
-    // Clear form
     setName("");
     setPoints("");
     setNotes("");

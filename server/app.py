@@ -14,7 +14,7 @@ def check_if_logged_in():
         'signup',
         'login',
         'check_session',
-        'genres'  # Allow public GET on genres
+        'genres'
     ]
 
     if (request.endpoint) not in open_access_list and (not session.get('user_id')):
@@ -238,7 +238,6 @@ class UserGenreList(Resource):
 
             return result
 
-        # Extract unique genre_ids from user's movies
         genre_ids = {movie.genre_id for movie in user.movies}
 
         genres = Genre.query.filter(Genre.id.in_(genre_ids)).all()
