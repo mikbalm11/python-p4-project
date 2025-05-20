@@ -1,4 +1,3 @@
-// src/components/SignUpForm.js
 import React, { useState } from "react";
 
 function SignUpForm({ onLogin }) {
@@ -11,10 +10,11 @@ function SignUpForm({ onLogin }) {
     e.preventDefault();
     setIsLoading(true);
     setErrors([]);
-    
+
     fetch("/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ username, password }),
     }).then((r) => {
       setIsLoading(false);

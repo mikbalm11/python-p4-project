@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import AddMovieForm from "./AddMovieForm";
 
-function MovieList({ movies, genres, userGenres, refreshData }) {
+function MovieList({ genres, userGenres, setGenres, setUserGenres }) {
   const [expandedGenreId, setExpandedGenreId] = useState(null);
   const [editingMovie, setEditingMovie] = useState(null);
   const [editName, setEditName] = useState("");
@@ -21,6 +21,10 @@ function MovieList({ movies, genres, userGenres, refreshData }) {
     setEditingMovie(null);
   }
 
+  function handleAddGenre(newGenre) {
+    setGenres((prev) => [...prev, newGenre]);
+  }
+
   async function handleEditSubmit(e) {
     e.preventDefault();
     try {
@@ -31,40 +35,51 @@ function MovieList({ movies, genres, userGenres, refreshData }) {
           name: editName,
           points: parseFloat(editPoints),
           notes: editNotes,
-          genre_id: parseInt(editGenreId, 10),
+          genre_id: parseInt(editGenreId),
         }),
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to update movie");
-      }
+      if (!res.ok) throw new Error("Failed to update movie");
 
-      await refreshData();
+      const updatedMovie = await res.json();
+
+      setUserGenres((prev) => {
+        const updated = prev.map((genre) => {
+          let movies = genre.movies?.filter((m) => m.id !== updatedMovie.id) || [];
+          if (genre.id === updatedMovie.genre.id) {
+            movies = [...movies, updatedMovie];
+          }
+          return { ...genre, movies };
+        });
+        return updated;
+      });
+
       setEditingMovie(null);
     } catch (error) {
       alert(error.message);
     }
   }
 
-  function handleDelete(id) {
+  async function handleDelete(id) {
     if (!window.confirm("Are you sure you want to delete this movie?")) return;
-    fetch(`/movies/${id}`, { method: "DELETE" }).then((r) => {
-      if (r.ok) {
-        refreshData();
-      } else {
-        alert("Failed to delete movie");
-      }
-    });
+
+    const res = await fetch(`/movies/${id}`, { method: "DELETE" });
+
+    if (res.ok) {
+      setUserGenres((prev) =>
+        prev
+          .map((genre) => ({
+            ...genre,
+            movies: genre.movies?.filter((movie) => movie.id !== id),
+          }))
+          .filter((genre) => genre.movies.length > 0)
+      );
+    } else {
+      alert("Failed to delete movie");
+    }
   }
 
   async function handleAddMovie({ name, points, notes, genreId }) {
-    const parsedGenreId = parseInt(genreId, 10);
-    if (isNaN(parsedGenreId)) {
-      alert("Please select a valid genre.");
-      return;
-    }
-
     try {
       const res = await fetch("/movies", {
         method: "POST",
@@ -73,30 +88,42 @@ function MovieList({ movies, genres, userGenres, refreshData }) {
           name,
           points: parseFloat(points),
           notes,
-          genre_id: parsedGenreId,
+          genre_id: parseInt(genreId),
         }),
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to add movie");
-      }
+      if (!res.ok) throw new Error("Failed to add movie");
 
-      await refreshData();
+      const newMovie = await res.json();
+
+      setUserGenres((prev) => {
+        const genreExists = prev.some((genre) => genre.id === newMovie.genre.id);
+
+        if (genreExists) {
+          // add to existing genre
+          return prev.map((genre) =>
+            genre.id === newMovie.genre.id
+              ? { ...genre, movies: [...(genre.movies || []), newMovie] }
+              : genre
+          );
+        } else {
+          // new genre with one movie
+          return [...prev, { ...newMovie.genre, movies: [newMovie] }];
+        }
+      });
     } catch (error) {
       alert(error.message);
     }
   }
 
-  const moviesByGenre = {};
-  genres.forEach((genre) => {
-    moviesByGenre[genre.id] = movies.filter((m) => m.genre.id === genre.id);
-  });
+  const uniqueUserGenres = Array.from(
+    new Map(userGenres.map(g => [g.id, g])).values()
+  );
 
   return (
     <div>
-      {userGenres.map((genre) => (
-        <div key={genre.id} style={{ marginBottom: "1rem" }}>
+      {uniqueUserGenres.map((genre) => (
+        <div key={`genre-${genre.id}`} style={{ marginBottom: "1rem" }}>
           <h3
             style={{ cursor: "pointer", color: "#0077cc" }}
             onClick={() =>
@@ -116,9 +143,9 @@ function MovieList({ movies, genres, userGenres, refreshData }) {
 
           {expandedGenreId === genre.id && (
             <ul>
-              {(moviesByGenre[genre.id] || []).map((movie) =>
+              {(genre.movies || []).map((movie) =>
                 editingMovie === movie.id ? (
-                  <li key={movie.id}>
+                  <li key={`movie-edit-${movie.id}`}>
                     <form onSubmit={handleEditSubmit}>
                       <input
                         type="text"
@@ -161,7 +188,7 @@ function MovieList({ movies, genres, userGenres, refreshData }) {
                     </form>
                   </li>
                 ) : (
-                  <li key={movie.id} className="movie-item">
+                  <li key={`movie-${movie.id}`} className="movie-item">
                     <div className="movie-buttons">
                       <button
                         onClick={() => startEditing(movie)}
@@ -193,7 +220,7 @@ function MovieList({ movies, genres, userGenres, refreshData }) {
       <AddMovieForm
         genres={genres}
         onAddMovie={handleAddMovie}
-        onAddGenre={refreshData}
+        onAddGenre={handleAddGenre}
       />
     </div>
   );

@@ -13,8 +13,7 @@ def check_if_logged_in():
     open_access_list = [
         'signup',
         'login',
-        'check_session',
-        'genres'
+        'check_session'
     ]
 
     if (request.endpoint) not in open_access_list and (not session.get('user_id')):
@@ -88,9 +87,25 @@ class CheckSession(Resource):
             if user_id:
                 user = User.query.get(user_id)
                 if user:
+                    user_data = {
+                        "id": user.id,
+                        "username": user.username,
+                        "genres": []
+                    }
+
+                    for genre in user.genres:
+                        user_movies_in_genre = [
+                            movie.to_dict() for movie in genre.movies if movie.user_id == user.id
+                        ]
+
+                        user_data["genres"].append({
+                            "id": genre.id,
+                            "name": genre.name,
+                            "movies": user_movies_in_genre
+                        })
 
                     result = make_response(
-                        user.to_dict(),
+                        user_data,
                         200
                     )
 
@@ -155,7 +170,7 @@ class Logout(Resource):
 
     def delete(self):
 
-        session['user_id'] = None
+        session.clear()
 
         result = make_response(
             {},
@@ -290,11 +305,9 @@ class MovieIndex(Resource):
         genre_id = fields.get('genre_id')
 
         try:
-            print("Received genre_id:", genre_id)
             genre = Genre.query.get(genre_id)
 
             if not genre:
-                print("Genre not found post")
                 result = make_response(
                     {'error': 'Genre not found'},
                     422
@@ -375,7 +388,6 @@ class MovieDetail(Resource):
             genre = Genre.query.get(genre_id)
 
             if not genre:
-                print("Genre not found patch"),
                 result = make_response(
                     {'error': 'Genre not found'},
                     422

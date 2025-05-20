@@ -15,6 +15,7 @@ function LoginForm({ onLogin }) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        credentials: "include",
       },
       body: JSON.stringify({ username, password }),
     }).then((r) => {

@@ -3,22 +3,26 @@ import React, { useState } from "react";
 function AddGenreForm({ onAddGenre }) {
   const [name, setName] = useState("");
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    fetch("/genres", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    })
-      .then((r) => {
-        if (r.ok) return r.json();
-        else return r.json().then((err) => Promise.reject(err));
-      })
-      .then((newGenre) => {
-        onAddGenre(newGenre);
-        setName("");
-      })
-      .catch((err) => alert(err.error || "Failed to add genre"));
+    try {
+      const res = await fetch("/genres", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to add genre");
+      }
+
+      const newGenre = await res.json();
+      onAddGenre(newGenre); // send new genre up
+      setName("");
+    } catch (error) {
+      alert(error.message);
+    }
   }
 
   return (
@@ -30,9 +34,8 @@ function AddGenreForm({ onAddGenre }) {
         onChange={(e) => setName(e.target.value)}
         required
         aria-label="New genre name"
-        className="input-text"
       />
-      <button type="submit" className="btn btn-primary">
+      <button type="submit" className="btn btn-success">
         Add Genre
       </button>
     </form>
