@@ -12,9 +12,9 @@ class User(db.Model, SerializerMixin):
     _password = db.Column(db.String, nullable=False)
 
     movies = db.relationship('Movie', back_populates='user', cascade='all, delete-orphan')
-    genres = association_proxy('movies', 'genre')
+    genres = db.relationship('Genre', secondary='movies', viewonly=True)
 
-    serialize_rules = ('-movies.user', '-_password',)
+    serialize_rules = ('-movies.user', '-genres', '-_password',)
 
     @hybrid_property
     def password(self):
@@ -47,9 +47,9 @@ class Genre(db.Model, SerializerMixin):
     name = db.Column(db.String, nullable=False, unique=True)
 
     movies = db.relationship('Movie', back_populates='genre', cascade='all, delete-orphan')
-    users = association_proxy('movies', 'user')
+    users = db.relationship('User', secondary='movies', viewonly=True)
 
-    serialize_rules = ('-movies.genre',)
+    serialize_rules = ('-movies.genre', '-users')
 
     @validates('name')
     def validate_name(self, key, name):
@@ -74,7 +74,7 @@ class Movie(db.Model, SerializerMixin):
     user = db.relationship('User', back_populates='movies')
     genre = db.relationship('Genre', back_populates='movies')
 
-    serialize_rules = ('-user.movies', '-genre.movies')
+    serialize_rules = ('-user', '-genre.movies', '-genre.users')
 
     @validates('name')
     def validate_name(self, key, name):

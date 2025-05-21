@@ -20,16 +20,15 @@ function App() {
         if (!res.ok) throw new Error("Not logged in");
         const data = await res.json();
 
-        setUser(data); // updated shape
-        setUserGenres(data.genres); // nested genres from backend
+        setUser(data); 
+        setUserGenres(data.genres);
 
-        // fetch genres for form dropdown (no movies)
         const genreRes = await fetch("/genres");
         setGenres(await genreRes.json());
 
       } catch {
         setUser(null);
-        setGenres([]); // no need to fetch genres if not logged in
+        setGenres([]);
         setUserGenres([]);
       } finally {
         setLoading(false);
@@ -80,8 +79,8 @@ function App() {
         <h2>Your Movies by Genre</h2>
 
         <MovieList
-          genres={genres}             // for the form dropdown
-          userGenres={userGenres}     // already contains user’s movies per genre
+          genres={genres}
+          userGenres={userGenres}
           setGenres={setGenres}
           setUserGenres={setUserGenres}
         />

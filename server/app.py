@@ -84,37 +84,38 @@ class CheckSession(Resource):
         try:
             user_id = session.get('user_id')
 
-            if user_id:
-                user = User.query.get(user_id)
-                if user:
-                    user_data = {
-                        "id": user.id,
-                        "username": user.username,
-                        "genres": []
+            if not user_id:
+                return make_response({}, 401)
+
+            user = User.query.get(user_id)
+
+            if not user:
+                return make_response({}, 401)
+
+            genre_map = {}
+
+            for movie in user.movies:
+                genre = movie.genre
+
+                if genre and genre.id not in genre_map:
+                    genre_map[genre.id] = {
+                        "id": genre.id,
+                        "name": genre.name,
+                        "movies": []
                     }
 
-                    for genre in user.genres:
-                        user_movies_in_genre = [
-                            movie.to_dict() for movie in genre.movies if movie.user_id == user.id
-                        ]
+                genre_map[genre.id]["movies"].append(movie.to_dict())
 
-                        user_data["genres"].append({
-                            "id": genre.id,
-                            "name": genre.name,
-                            "movies": user_movies_in_genre
-                        })
+            user_data = {
+                "id": user.id,
+                "username": user.username,
+                "genres": list(genre_map.values())
+            }
 
-                    result = make_response(
-                        user_data,
-                        200
-                    )
-
-            else:
-
-                result = make_response(
-                    {},
-                    401
-                )
+            result = make_response(
+                user_data,
+                200
+            )
 
             return result
 
@@ -137,7 +138,12 @@ class Login(Resource):
             username = request_json.get('username')
             password = request_json.get('password')
 
+            print("Username:", username)
+            print("Password:", password)
+
             user = User.query.filter_by(username=username).first()
+            print("User found:", user)
+
 
             if user and user.authenticate(password):
                 session['user_id'] = user.id
@@ -186,7 +192,7 @@ class GenreList(Resource):
         genres = Genre.query.all()
 
         result = make_response(
-            [genre.to_dict(rules=('-movies',)) for genre in genres],
+            [genre.to_dict() for genre in genres],
             200
         )
 
@@ -226,43 +232,6 @@ class GenreList(Resource):
             )
 
             return result
-
-class UserGenreList(Resource):
-
-    def get(self):
-
-        user_id = session.get('user_id')
-
-        if not user_id:
-
-            result = make_response(
-                {'error': 'Unauthorized'},
-                401
-            )
-
-            return result
-
-        user = User.query.get(user_id)
-
-        if not user:
-
-            result = make_response(
-                {'error': 'User not found'},
-                404
-            )
-
-            return result
-
-        genre_ids = {movie.genre_id for movie in user.movies}
-
-        genres = Genre.query.filter(Genre.id.in_(genre_ids)).all()
-
-        result = make_response(
-            [genre.to_dict() for genre in genres],
-            200
-        )
-
-        return result
 
 class MovieIndex(Resource):
 
@@ -474,7 +443,6 @@ api.add_resource(Logout, '/logout', endpoint='logout')
 api.add_resource(GenreList, '/genres', endpoint='genres')
 api.add_resource(MovieIndex, '/movies', endpoint='movies')
 api.add_resource(MovieDetail, '/movies/<int:movie_id>', endpoint='movie_detail')
-api.add_resource(UserGenreList, '/user_genres', endpoint='user_genres')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

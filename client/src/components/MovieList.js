@@ -100,14 +100,12 @@ function MovieList({ genres, userGenres, setGenres, setUserGenres }) {
         const genreExists = prev.some((genre) => genre.id === newMovie.genre.id);
 
         if (genreExists) {
-          // add to existing genre
           return prev.map((genre) =>
             genre.id === newMovie.genre.id
               ? { ...genre, movies: [...(genre.movies || []), newMovie] }
               : genre
           );
         } else {
-          // new genre with one movie
           return [...prev, { ...newMovie.genre, movies: [newMovie] }];
         }
       });
@@ -116,13 +114,9 @@ function MovieList({ genres, userGenres, setGenres, setUserGenres }) {
     }
   }
 
-  const uniqueUserGenres = Array.from(
-    new Map(userGenres.map(g => [g.id, g])).values()
-  );
-
   return (
     <div>
-      {uniqueUserGenres.map((genre) => (
+      {userGenres.map((genre) => (
         <div key={`genre-${genre.id}`} style={{ marginBottom: "1rem" }}>
           <h3
             style={{ cursor: "pointer", color: "#0077cc" }}

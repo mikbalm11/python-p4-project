@@ -18,7 +18,7 @@ function AddGenreForm({ onAddGenre }) {
       }
 
       const newGenre = await res.json();
-      onAddGenre(newGenre); // send new genre up
+      onAddGenre(newGenre);
       setName("");
     } catch (error) {
       alert(error.message);

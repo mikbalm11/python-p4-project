@@ -29,9 +29,9 @@ function AddMovieForm({ genres, onAddMovie, onAddGenre }) {
   }
 
   function handleNewGenre(newGenre) {
-    onAddGenre(newGenre);        // push new genre to global list
-    setGenreId(newGenre.id);     // auto-select
-    setShowGenreForm(false);     // close genre form
+    onAddGenre(newGenre);
+    setGenreId(newGenre.id);
+    setShowGenreForm(false);
   }
 
   return (
